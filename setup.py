@@ -9,7 +9,7 @@ setup(name='wikimt',
       author=["Minh-Tri Pham"],
       packages=find_namespace_packages(include=['mt.*']),
       install_requires=[
-          'basemt',
+          'pandasmt',
           'wikipedia',  # obviously
       ],
       url='https://github.com/inteplus/wikimt',

@@ -1,5 +1,5 @@
 sphinx-autoapi
 sphinx-rtd-theme
-basemt
+pandasmt
 wikipedia
 
