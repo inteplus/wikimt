@@ -38,7 +38,7 @@ class Page(object):
     ----------
     page_id : str
         resolved page id
-    wiki : wikipedia.Page
+    wiki : wikipedia.WikipediaPage
         the remote instance wrapped by this instance
     dirpath : str
         path to the folder containing information about the page
@@ -69,7 +69,7 @@ class Page(object):
             self.page_id = page_id
             self.wiki = None if cache_only else _p.page(pageid=page_id)
 
-        self.dirpath = page_id_dirpath(page_id)
+        self.dirpath = page_id_dirpath(self.page_id)
         _p.make_dirs(self.dirpath)
 
         self.sync_head()
@@ -79,27 +79,6 @@ class Page(object):
 
     
     @property
-    def wiki_revision_id(self):
-        if not hasattr(self, '_wiki_revision_id'):
-            self._wiki_revision_id = None if self.wiki is None else self.wiki.revision_id
-        return self._wiki_revision_id
-
-    
-    @property
-    def wiki_url(self):
-        if not hasattr(self, '_wiki_url'):
-            self._wiki_url = None if self.wiki is None else self.wiki.url
-        return self._wiki_url
-
-    
-    @property
-    def wiki_content(self):
-        if not hasattr(self, '_wiki_content'):
-            self._wiki_content = None if self.wiki is None else self.wiki.content
-        return self._wiki_content
-
-
-    @property
     def content(self):
         '''Loads local page content and synchronises it with Wikipedia if allowed.'''
         if not hasattr(self, '_content'):
@@ -108,12 +87,12 @@ class Page(object):
             if _p.exists(filepath):
                 content = _js.load(open(filepath, 'r'))
                 if content['revision_id'] != self.revision_id: # outdated content
-                    if self.wiki_content is None:
-                        raise ValueError("Unable to synchronise outdated content for page with id '{}'. Please disable 'cache_only'.".format(self.page_id))
-                    content = {'revision_id': self.revision_id, 'content': self.wiki_content}
+                    if self.wiki is None:
+                        raise ValueError("Unable to update the outdated content of page with id '{}'. Please disable 'cache_only'.".format(self.page_id))
+                    content = {'revision_id': self.revision_id, 'content': self.wiki.content}
                     _js.dump(content, open(filepath, 'w'))
             else:
-                content = {'revision_id': self.revision_id, 'content': self.wiki_content}
+                content = {'revision_id': self.revision_id, 'content': self.wiki.content}
                 _js.dump(content, open(filepath, 'w'))
                 
             self._content = content['content']
@@ -129,14 +108,13 @@ class Page(object):
         if _p.exists(filepath):
             head = _js.load(open(filepath, 'r'))
             dirty = False
-            if self.wiki_revision_id is not None: # sync required
-                if self.wiki_revision_id != head['revision_id']: # needs updating
-                    dirty = True
-                    head = {'revision_id': self.wiki_revision_id, 'url': self_wiki.url}                    
+            if self.wiki is not None and self.wiki.revision_id != head['revision_id']: # needs updating
+                dirty = True
+                head = {'revision_id': self.wiki.revision_id, 'url': self.wiki.url}                    
         else:
             if self.wiki is None:
                 raise ValueError("Unable to find the head info for page with id '{}'".format(self.page_id))
-            head = {'revision_id': self.wiki_revision_id, 'url': self_wiki.url}
+            head = {'revision_id': self.wiki.revision_id, 'url': self.wiki.url}
             dirty = True
 
         self.revision_id = head['revision_id']

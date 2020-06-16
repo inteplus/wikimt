@@ -66,7 +66,7 @@ def as_page_id(page_title, cache_only=False):
 
     if cache_only:
         filepath = page_title_filepath(page_title)
-        local_page_id = _js.load(open(filepath, 'r')) if _p.exists(head_filepath) else None
+        local_page_id = _js.load(open(filepath, 'r')) if _p.exists(filepath) else None
         if not local_page_id:
             raise _w.exceptions.PageError("Page titled '{}' not found.".format(page_title), pageid=None)
         return local_page_id, None
